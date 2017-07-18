@@ -1,0 +1,28 @@
+{
+  "name": "marvel_search",
+  "version": "1.0.0",
+  "description": "Find comics with marvel api rest",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jefer94/TestGrability.git"
+  },
+  "keywords": [
+    "find",
+    "search",
+    "api",
+    "rest",
+    "marvel",
+    "comics",
+    "comic"
+  ],
+  "author": "Jeferson De Freitas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jefer94/TestGrability/issues"
+  },
+  "homepage": "https://github.com/jefer94/TestGrability#readme"
+}
