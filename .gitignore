@@ -1,3 +1,4 @@
 node_modules/
+config/marvel.js
 *.swp
 *.swo

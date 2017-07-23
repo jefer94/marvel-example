@@ -24,5 +24,11 @@
   "bugs": {
     "url": "https://github.com/jefer94/TestGrability/issues"
   },
-  "homepage": "https://github.com/jefer94/TestGrability#readme"
+  "homepage": "https://github.com/jefer94/TestGrability#readme",
+  "dependencies": {
+    "express": "^4.15.3",
+    "pug": "^2.0.0-rc.2",
+    "stylus": "^0.54.5"
+  },
+  "devDependencies": {}
 }

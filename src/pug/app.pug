@@ -1,0 +1,17 @@
+doctype html
+// source code ./src/index.pug
+html
+  head
+    meta(charset='utf-8')
+    title Marvel search
+    // link(rel='shortcut icon' type='image/svg+xml' href='icon/favicon.svg')
+    // link(rel='icon' sizes='any' href='icon/favicon.svg' type='image/svg+xml')
+    // link(rel='mask-icon' href='icon/favicon.svg' color='black')
+    // link(rel='apple-touch-icon' sizes='180x180' href='icon/favicon.svg' type='image/svg+xml')
+    style.
+      #{require('./src/stylus/marvel.search.styl')}
+
+  body
+    include ./modules/navbar
+    include ./modules/results
+    include ./modules/script
