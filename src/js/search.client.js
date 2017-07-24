@@ -13,34 +13,53 @@ window.onresize();
 const client = {
   // json response
   json: response => {
-    var contentType = response.headers.get("content-type");
-    console.log('1')
-    if(contentType && contentType.includes("application/json")) {
-      console.log('2');
+    var contentType = response.headers.get('content-type');
+    if(contentType && contentType.includes('application/json')) {
       return response.json();
     }
   },
+  show: comic => {
+    let page = comic.pageCount > 0 ?
+      `<p>pages: ${comic.pageCount}</p>` :
+      '';
+    let print = comic.prices[0].price !== 0 ?
+      `print ${comic.prices[0].price}` :
+      '';
+    let digital = comic.prices.length > 1 ?
+      `, digital ${comic.prices[1].price}` :
+      '';
+    if (print === '')
+      digital = digital.replace(/, /, '')
+    let description = typeof comic.description === 'string' && comic.description.length > 0 ?
+      `<p>${comic.description}</p>` :
+      '';
+    console.log(comic);
+    // console.log(comic);
+    if (description !== '')
+      results.innerHTML = `<a class='card' onclick='client.shop("${comic.resourceURI}")'>
+          <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
+          <h3>title: ${comic.title}</h3>
+          ${description}
+          <p>prices: ${print}${digital}</p>
+          ${page}
+        </a>
+      ${results.innerHTML}`;
+    else
+      results.innerHTML = `${results.innerHTML}
+        <a class='card' onclick='client.shop("${comic.resourceURI}")'>
+          <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
+          <h3>title: ${comic.title}</h3>
+          ${description}
+          <p>prices: ${print}${digital}</p>
+          ${page}
+        </a>`;
+  },
   comics: result => {
-    console.log(result);
+    // console.log(result);
     if (result.data.results.length > 0) {
-      result.data.results.map(comic => {
-        if (comic.pageCount === 0) return;
-        let digital = comic.prices.length > 1 ?
-          `, digital ${comic.prices[1].price}` :
-          '';
-        let description = comic.description ?
-          `<p>${comic.description}</p>` :
-          '';
-        console.log(comic);
-        results.innerHTML += `<div class='card'>
-            <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
-            <h3>title: ${comic.title}</h3>
-            ${description}
-            <p>prices: print ${comic.prices[0].price}${digital}</p>
-            <p>pages: ${comic.pageCount}</p>
-          </div>
-        `;
-      })
+      characters = result.data.results;
+      characters
+        .map(client.show);
     }
   },
   // error 404
@@ -51,28 +70,28 @@ const client = {
       return;
     }
   },
+  // show characters in home
+  start: comic => {
+    // console.log(comic);
+    results.innerHTML += `<a class='card' onclick='client.get("${comic.name}")'>
+      <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
+        <h3>${comic.name}</h3>
+        <p>${comic.description}</p>
+      </a>
+    `;
+  },
   // home
   home: (result, results, comics) => {
     if (comics === '') {
-      result.data.results.map(comic => {
-        location.hash = `#!/${comics}`;
-        console.log(comic);
-        /*
-        let related = '';
-        if (comic.comics.items.length > 0) {
-          related += `<h4>related comics</h4>`;
-          comic.comics.items.map(element => {
-            related += `<p>${element.name}</p>`;
-          });
-        }
-        */
-        results.innerHTML += `<a class='card' onclick='client.get("${comic.name}")'>
-          <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
-            <h3>${comic.name}</h3>
-            <p>${comic.description}</p>
-          </a>
-        `;
-      })
+      let characters = result.data.results;
+      location.hash = `#!/${comics}`;
+      characters
+        .filter(comic => comic.description !== '')
+        .map(client.start);
+
+      characters
+        .filter(comic => comic.description === '')
+        .map(client.start);
     }
   },
   // products
@@ -83,11 +102,9 @@ const client = {
           var results = document.getElementById('results');
           results.innerHTML = '';
 
-          console.log('c');
-
           if (comic.comics.items.length > 0)
             comic.comics.items.map(item => {
-              console.log('b');
+              console.log('some')
               fetch(`${item.resourceURI}?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${offset}`)
                 .then(client.json)
                 .then(client.comics)
@@ -95,7 +112,7 @@ const client = {
             });
           else {
             var results = document.getElementById('results');
-            console.log(results);
+            // console.log(results);
             results.innerHTML = `<h1 style='text-align=\'center\''>${comics} does not have any comics</h1>`;
           }
           location.hash = `#!/${comics}`;
