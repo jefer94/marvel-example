@@ -14,30 +14,34 @@ const client = {
   // json response
   json: response => {
     var contentType = response.headers.get("content-type");
+    console.log('1')
     if(contentType && contentType.includes("application/json")) {
+      console.log('2');
       return response.json();
     }
   },
-  // get comics
   comics: result => {
-    result.data.results.map(comic => {
-      if (comic.pageCount === 0) return;
-      let digital = comic.prices.length > 1 ?
-        `, digital ${comic.prices[1].price}` :
-        '';
-      let description = comic.description ?
-        `<p>${comic.description}</p>` :
-        '';
-      console.log(comic);
-      results.innerHTML += `<div class='card'>
-          <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
-          <h3>title: ${comic.title}</h3>
-          ${description}
-          <p>prices: print ${comic.prices[0].price}${digital}</p>
-          <p>pages: ${comic.pageCount}</p>
-        </div>
-      `;
-    })
+    console.log(result);
+    if (result.data.results.length > 0) {
+      result.data.results.map(comic => {
+        if (comic.pageCount === 0) return;
+        let digital = comic.prices.length > 1 ?
+          `, digital ${comic.prices[1].price}` :
+          '';
+        let description = comic.description ?
+          `<p>${comic.description}</p>` :
+          '';
+        console.log(comic);
+        results.innerHTML += `<div class='card'>
+            <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
+            <h3>title: ${comic.title}</h3>
+            ${description}
+            <p>prices: print ${comic.prices[0].price}${digital}</p>
+            <p>pages: ${comic.pageCount}</p>
+          </div>
+        `;
+      })
+    }
   },
   // error 404
   e404: (result, results, comics) => {
@@ -62,7 +66,7 @@ const client = {
           });
         }
         */
-        results.innerHTML += `<a class='card' onclick='get_character("${comic.name}")'>
+        results.innerHTML += `<a class='card' onclick='client.get("${comic.name}")'>
           <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
             <h3>${comic.name}</h3>
             <p>${comic.description}</p>
@@ -72,18 +76,31 @@ const client = {
     }
   },
   // products
-  product: (result, results, comics) => {
+  product: (result, results, comics, offset) => {
     if (comics !== '') {
-      result.data.results.map(comic => {
-        var results = document.getElementById('results');
-        results.innerHTML = '';
-        comic.comics.items.map(item => {
-          fetch(`${item.resourceURI}?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}`)
-            .then(client.json)
-            .then(client.comics);
-        });
-        location.hash = `#!/${comics}`;
-      })
+      if (result.data.results.length > 0) {
+        result.data.results.map(comic => {
+          var results = document.getElementById('results');
+          results.innerHTML = '';
+
+          console.log('c');
+
+          if (comic.comics.items.length > 0)
+            comic.comics.items.map(item => {
+              console.log('b');
+              fetch(`${item.resourceURI}?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${offset}`)
+                .then(client.json)
+                .then(client.comics)
+                .catch(err => console.log(err));
+            });
+          else {
+            var results = document.getElementById('results');
+            console.log(results);
+            results.innerHTML = `<h1 style='text-align=\'center\''>${comics} does not have any comics</h1>`;
+          }
+          location.hash = `#!/${comics}`;
+        })
+      }
     }
   },
   get: (character, page) => {
@@ -94,20 +111,22 @@ const client = {
     // find a character
     var comics  = character ?
       `&name=${character}` :
-      location.hash !== '' && location.hash !== '#!/' ?
+      location.hash !== '' && location.hash !== '#!/' && character !== '' ?
         `&name=${location.hash.replace(/#!\//, '')}` :
         '';
     var results = document.getElementById('results');
     results.innerHTML = '';
     // consult marvel api rest
+    console.log(`http://gateway.marvel.com:80/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${comics}${offset}`)
     fetch(`http://gateway.marvel.com:80/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${comics}${offset}`)
       .then(client.json)
       .then(result => {
         comics = comics.replace(/&name=/, '');
         client.e404(result, results, comics);
         client.home(result, results, comics);
-        client.product(result, results, comics);
+        client.product(result, results, comics, offset);
       })
+      .catch(err => console.log(err));
   }
 }
 // consult marvel api rest, render various characters if the parameter
