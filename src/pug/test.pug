@@ -1,0 +1,29 @@
+doctype html
+// source code ./src/index.pug
+html
+  head
+    meta(charset='utf-8')
+    title Marvel search
+    // link(rel='shortcut icon' type='image/svg+xml' href='icon/favicon.svg')
+    // link(rel='icon' sizes='any' href='icon/favicon.svg' type='image/svg+xml')
+    // link(rel='mask-icon' href='icon/favicon.svg' color='black')
+    // link(rel='apple-touch-icon' sizes='180x180' href='icon/favicon.svg' type='image/svg+xml')
+    style.
+      #{compress('./node_modules/mocha/mocha.css')}
+
+  body
+    #mocha
+    script!=compress('./node_modules/mocha/mocha.js')
+    script.
+      mocha.setup('bdd');
+      const assert = (bool, message) => {
+        message = message || '';
+        console.log(bool)
+        if (!bool)
+          throw message;
+      };
+    script!=compress('./src/js/shop.js')
+    script!=compress('./src/test/shop.js')
+    script!=compress('./src/test/client.js')
+    script.
+      mocha.run();

@@ -33,13 +33,8 @@ app
   .get('/', (req, res) => {
     res.render('app', environment);
   })
-  .get('/search/:id', (req, res) => {
-    res.render('search');
-  })
-  .get('/assets/:id', (req, res) => {
-    //let res = fs.readFileSync(`${__dirname}/public${ctx.path}`);
-    //ctx.body = res.toString(`${__dirname}../src`, '/assets')
-    //ctx.body = res;
+  .get('/test', (req, res) => {
+    res.render('test', environment);
   })
   .listen(port, () => {
     console.log(`  Express server listening on port ${port}`);

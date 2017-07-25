@@ -1,0 +1,14 @@
+#shop.shop.hide
+  img#look(src='')
+  #text.text
+  button#close
+    img(src= require('./src/icons/btn-close') onclick='shop.close()')
+  button#buy(onclick='shop.buy()')
+    span buy now 
+    img(src= require('./src/icons/shopping-cart-primary.png'))
+  button#add
+    span add to favorite 
+    img(src= require('./src/icons/btn-favourites-primary.png'))
+  button#favorite
+    span my favorite 
+    img(src= require('./src/icons/shopping-cart-primary.png'))
