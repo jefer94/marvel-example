@@ -1,4 +1,5 @@
 describe('shop', (done) => {
+  localStorage.clear();
   describe('#favorite()', () => {
     it('should return a array empty', () => {
       assert(shop.favorite().length === [].length);
@@ -17,7 +18,7 @@ describe('shop', (done) => {
   })
   describe('#add(comic)', () => {
     it('should return []', () => {
-      assert(shop.add({title: 'Example', example: '1'}) === undefined);
+      assert(shop.add(JSON.stringify({title: 'Example', example: '1'})) === undefined);
     })
   })
   describe('#favorite()', () => {

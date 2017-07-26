@@ -3,12 +3,12 @@
   #text.text
   button#close
     img(src= require('./src/icons/btn-close') onclick='shop.close()')
-  button#buy(onclick='shop.buy()')
+  button#buy.hover(onclick='shop.buy()')
     span buy now 
     img(src= require('./src/icons/shopping-cart-primary.png'))
-  button#add
+  button#add.hover
     span add to favorite 
     img(src= require('./src/icons/btn-favourites-primary.png'))
-  button#favorite
+  button#favorite.hover
     span my favorite 
     img(src= require('./src/icons/shopping-cart-primary.png'))

@@ -112,33 +112,37 @@ const client = {
   favorites: () => {
     var results = document.getElementById('results');
     results.innerHTML = '';
-    shop
-      .favorite()
-      .map(comic => {
-        console.log('a')
-        let page = comic.pageCount > 0 ?
-          `<p>pages: ${comic.pageCount}</p>` :
-          '';
-        let print = comic.prices[0].price !== 0 ?
-          `print ${comic.prices[0].price}` :
-          '';
-        let digital = comic.prices.length > 1 ?
-          `, digital ${comic.prices[1].price}` :
-          '';
-        if (print === '')
-          digital = digital.replace(/, /, '')
-        let description = typeof comic.description === 'string' && comic.description.length > 0 ?
-          `<p>${comic.description}</p>` :
-          '';
-        results.innerHTML += `<a class='card' onclick='shop.show("${comic.resourceURI}")'>
-            <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
-            <h3>title: ${comic.title}</h3>
-            ${description}
-            <p>prices: ${print}${digital}</p>
-            ${page}
-          </a>
-        `;
-      });
+    if (shop.favorite().length > 0) {
+      shop
+        .favorite()
+        .map(comic => {
+          let page = comic.pageCount > 0 ?
+            `<p>pages: ${comic.pageCount}</p>` :
+            '';
+          let print = comic.prices[0].price !== 0 ?
+            `print ${comic.prices[0].price}` :
+            '';
+          let digital = comic.prices.length > 1 ?
+            `, digital ${comic.prices[1].price}` :
+            '';
+          if (print === '')
+            digital = digital.replace(/, /, '')
+          let description = typeof comic.description === 'string' && comic.description.length > 0 ?
+            `<p>${comic.description}</p>` :
+            '';
+          results.innerHTML += `<a class='card'>
+              <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
+              <h3>title: ${comic.title}</h3>
+              ${description}
+              <p>prices: ${print}${digital}</p>
+              ${page}
+              <bottom class='delete' onclick='shop.remove(\`${comic.title}\`)'>delete</bottom>
+            </a>
+          `;
+        });
+    }
+    else
+      results.innerHTML = `<h1 style='text-align=\'center\''>not have any comic favorite</h1>`;
     location.hash = '#!/favorites';
   },
   get: (character, page) => {
@@ -155,7 +159,7 @@ const client = {
     var results = document.getElementById('results');
     results.innerHTML = '';
     // consult marvel api rest
-    console.log(`http://gateway.marvel.com:80/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${comics}${offset}`)
+    // console.log(`http://gateway.marvel.com:80/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${comics}${offset}`)
     fetch(`http://gateway.marvel.com:80/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${comics}${offset}`)
       .then(client.json)
       .then(result => {

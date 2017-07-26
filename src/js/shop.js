@@ -9,9 +9,9 @@ const shop = {
     alert('coming soon');
   },
   add: comic => {
-    comic = JSON.parse(comic);
     if (!comic)
       return;
+    comic = JSON.parse(comic);
     let cache;
     if (!localStorage.getItem('favorite'))
       localStorage.setItem('favorite', JSON.stringify([comic]))
@@ -43,11 +43,15 @@ const shop = {
       .parse(
         localStorage.getItem('favorite')
       );
+    console.log(session)
     session = session
-      .filter(item => {console.log(item.name !== name)})
-    console.log(name)
+      .filter(item => {
+        
+        return item.title !== name
+      });
     console.log(session)
     localStorage.setItem('favorite', JSON.stringify(session));
+    client.favorites();
     return true;
   },
   preprocessor: comic => {
