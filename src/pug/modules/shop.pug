@@ -1,7 +1,7 @@
 #shop.shop.hide
   img#look(src='')
   #text.text
-  button#close
+  button#close(onclick='shop.close()')
     img(src= require('./src/icons/btn-close') onclick='shop.close()')
   button#buy.hover(onclick='shop.buy()')
     span buy now 

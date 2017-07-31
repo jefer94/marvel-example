@@ -1,13 +1,13 @@
 // marvel client
-const client = {
+const client = function() {
   // json response
-  json: response => {
+  const json = response => {
     var contentType = response.headers.get('content-type');
     if(contentType && contentType.includes('application/json')) {
       return response.json();
     }
-  },
-  show: comic => {
+  }
+  const show = comic => {
     let page = comic.pageCount > 0 ?
       `<p>pages: ${comic.pageCount}</p>` :
       '';
@@ -22,7 +22,6 @@ const client = {
     let description = typeof comic.description === 'string' && comic.description.length > 0 ?
       `<p>${comic.description}</p>` :
       '';
-    console.log(comic);
     // console.log(comic);
     if (description !== '')
       results.innerHTML = `<a class='card' onclick='shop.show("${comic.resourceURI}")'>
@@ -42,136 +41,249 @@ const client = {
           <p>prices: ${print}${digital}</p>
           ${page}
         </a>`;
-  },
-  comics: result => {
-    // console.log(result);
-    if (result.data.results.length > 0) {
-      characters = result.data.results;
-      characters
-        .map(client.show);
-    }
-  },
-  // error 404
-  e404: (result, results, comics) => {
-    if (result.data.count === 0) {
-      comics = comics.replace(/&name=/, '');
-      results.innerHTML += `<h1 style='text-align=\'center\''>can not find ${comics}</h1>`;
+  }
+  // comics
+  let comics = (name, id, offset) => {
+    // memoization
+    const args = JSON.stringify({
+      id: id,
+      name: name,
+      offset: offset
+    });
+    this.args = this.args || [];
+    if (this.args[args]) {
+      if (this.args[args].length)
+        render.comics(this.args[args]);
+      else
+        render.e404('can not find any comic');
       return;
     }
-  },
-  // show characters in home
-  start: comic => {
-    // console.log(comic);
-    results.innerHTML += `<a class='card' onclick='client.get("${comic.name}")'>
-      <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
-        <h3>${comic.name}</h3>
-        <p>${comic.description}</p>
-      </a>
-    `;
-  },
+    offset = offset ?
+      +offset * 10 :
+      0;
+    // console.log(`http://gateway.marvel.com/v1/public/characters/${id}/comics?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}&offset=${offset}`);
+    fetch(`http://gateway.marvel.com/v1/public/characters/${id}/comics?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}&offset=${offset}`)
+      .then(json)
+      .then(characters => {
+        render.load();
+        location.hash = `#!/${name}`;
+        // console.log(characters)
+        if (characters.data.count > 0) {
+          let response = characters.data.results
+            .map(comic => {
+              // generate a array
+              return {
+                id          : comic.id,
+                title       : comic.title,
+                resourceURI : comic.resourceURI,
+                description : comic.description,
+                thumbnail   : `${comic.thumbnail.path}.${comic.thumbnail.extension}`,
+                pages       : comic.pageCount,
+                print       : comic.prices[0].price,
+                digital     : comic.prices[1] ?
+                  comic.prices[1].price :
+                  0
+              };
+            })
+          this.args[args] = response;
+          render.comics(response);
+        }
+        else {
+          this.args[args] = [];
+          render.e404('can not find any comic');
+        }
+      })
+      .catch(console.error);
+      // render.comics(results);
+  }
+
+  // error 404
+  let e404 = (elements, title) => {
+    if (elements === 0) {
+      title = title.replace(/&name=/, '');
+      render.e404(`can not find ${title}`);
+    }
+  }
   // home
-  home: (result, results, comics) => {
-    if (comics === '') {
-      let characters = result.data.results;
-      location.hash = `#!/${comics}`;
-      characters
-        .filter(comic => comic.description !== '')
-        .map(client.start);
-
-      characters
-        .filter(comic => comic.description === '')
-        .map(client.start);
+  let home = offset => {
+    // memoization
+    const args = JSON.stringify({
+      offset: offset
+    });
+    this.args = this.args || [];
+    if (this.args[args]) {
+      if (this.args[args].length)
+        render.characters(this.args[args]);
+      else
+        render.e404('error 404 in home');
+      return;
     }
-  },
-  // products
-  product: (result, results, comics, offset) => {
-    if (comics !== '') {
-      if (result.data.results.length > 0) {
-        result.data.results.map(comic => {
-          var results = document.getElementById('results');
-          results.innerHTML = '';
-
-          if (comic.comics.items.length > 0)
-            comic.comics.items.map(item => {
-              console.log('some')
-              fetch(`${item.resourceURI}?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${offset}`)
-                .then(client.json)
-                .then(client.comics)
-                .catch(err => console.log(err));
-            });
-          else {
-            var results = document.getElementById('results');
-            // console.log(results);
-            results.innerHTML = `<h1 style='text-align=\'center\''>${comics} does not have any comics</h1>`;
-          }
-          location.hash = `#!/${comics}`;
-        })
-      }
-    }
-  },
-  favorites: () => {
+    offset = offset ?
+      +offset * 10 :
+      0;
+    // console.log(`http://gateway.marvel.com/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}&offset=${offset}`);
+    fetch(`http://gateway.marvel.com/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}&offset=${offset}`)
+      .then(json)
+      .then(characters => {
+        render.load();
+        location.hash = `#!/`;
+        let response = characters.data.results
+          .map(value => {
+            // generate a array
+            return {
+              id: value.id,
+              name: value.name,
+              description: value.description,
+              thumbnail: `${value.thumbnail.path}.${value.thumbnail.extension}`
+            }
+          })
+        this.args[args] = response;
+        render.characters(response);
+      })
+      .catch(console.error);
+  }
+  // favorites
+  let favorites = () => {
+    shop.close();
     var results = document.getElementById('results');
     results.innerHTML = '';
     if (shop.favorite().length > 0) {
-      shop
+      const result = shop
         .favorite()
         .map(comic => {
-          let page = comic.pageCount > 0 ?
-            `<p>pages: ${comic.pageCount}</p>` :
-            '';
-          let print = comic.prices[0].price !== 0 ?
-            `print ${comic.prices[0].price}` :
-            '';
-          let digital = comic.prices.length > 1 ?
-            `, digital ${comic.prices[1].price}` :
-            '';
-          if (print === '')
-            digital = digital.replace(/, /, '')
-          let description = typeof comic.description === 'string' && comic.description.length > 0 ?
-            `<p>${comic.description}</p>` :
-            '';
-          results.innerHTML += `<a class='card'>
-              <img src='${comic.thumbnail.path}.${comic.thumbnail.extension}'/>
-              <h3>title: ${comic.title}</h3>
-              ${description}
-              <p>prices: ${print}${digital}</p>
-              ${page}
-              <bottom class='delete' onclick='shop.remove(\`${comic.title}\`)'>delete</bottom>
-            </a>
-          `;
+          return {
+            id: comic.id,
+            title: comic.title,
+            description: comic.description,
+            thumbnail: `${comic.thumbnail}`
+          }
         });
+      render.favorites(result);
     }
     else
-      results.innerHTML = `<h1 style='text-align=\'center\''>not have any comic favorite</h1>`;
+      render.e404('not have any comic favorite');
+    render.load();
     location.hash = '#!/favorites';
-  },
-  get: (character, page) => {
-    // number of results it will be omitting
-    var offset = page ?
-      `offset=${page * 10}` :
-      '';
-    // find a character
-    var comics  = character ?
-      `&name=${character}` :
-      location.hash !== '' && location.hash !== '#!/' && character !== '' ?
-        `&name=${location.hash.replace(/#!\//, '')}` :
-        '';
-    var results = document.getElementById('results');
-    results.innerHTML = '';
-    // consult marvel api rest
-    // console.log(`http://gateway.marvel.com:80/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${comics}${offset}`)
-    fetch(`http://gateway.marvel.com:80/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}${comics}${offset}`)
-      .then(client.json)
-      .then(result => {
-        comics = comics.replace(/&name=/, '');
-        if (comics === 'favorites') {
-          client.favorites();
-          return;
-        }
-        client.e404(result, results, comics);
-        client.home(result, results, comics);
-        client.product(result, results, comics, offset);
-      })
-      .catch(err => console.log(err));
   }
-}
+  const search = (character, offset) => {
+    // memoization
+    const args = JSON.stringify({
+      character: character,
+      offset: offset
+    });
+    this.args = this.args || [];
+    if (!isNaN(this.args[args])) {
+      if (this.args[args] !== 0) {
+        comics(character, this.args[args], offset);
+      }
+      else
+        render.e404(`can not find ${character}`);
+      return;
+    }
+    // console.log(`http://gateway.marvel.com/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}&name=${character}`);
+    fetch(`http://gateway.marvel.com/v1/public/characters?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}&name=${character}`)
+      .then(json)
+      .then(result => {
+        if (result.data.count) {
+          const comic = result.data.results[0];
+          this.args[args] = comic.id;
+          comics(comic.name, comic.id, offset)
+        }
+        else {
+          this.args[args] = 0;
+          render.e404(`can not find ${character}`);
+        }
+      })
+      .catch(console.error);
+  }
+  // shop
+  const store = id => {
+    // memoization
+    const args = JSON.stringify({
+      id: id
+    });
+    this.args = this.args || [];
+    if (!isNaN(this.args[args])) {
+      if (this.args[args] !== 0) {
+        render.shop(this.args[args]);
+      }
+      else
+        render.e404(`can not find this comic`);
+      return;
+    }
+    render.load(true);
+    // console.log(`http://gateway.marvel.com/v1/public/comics/${id}?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}`);
+    fetch(`http://gateway.marvel.com/v1/public/comics/${id}?limit=10&ts=#{ts}&apikey=#{public}&hash=#{hash}`)
+      .then(json)
+      .then(favorites => {
+        if (favorites.data.count > 0) {
+          let response = favorites.data.results
+            .map(comic => {
+              // generate a array
+              return {
+                title: comic.title,
+                resourceURI: comic.resourceURI,
+                description: comic.description,
+                thumbnail: `${comic.thumbnail.path}.${comic.thumbnail.extension}`,
+                pages: comic.pageCount,
+                print: comic.prices[0].price,
+                digital: comic.prices[1] ?
+                  comic.prices[1].price :
+                  0
+              };
+            })
+          this.args[args] = response;
+          render.shop(response);
+        }
+        else {
+          this.args[args] = [];
+          render.e404('can not find this comic');
+        }
+      })
+      .catch(console.error);
+  }
+  const get = (character, page_or_id, page) => {
+    render.load(true);
+    const offset = page ?
+      page :
+      page_or_id < 100 ?
+        page_or_id :
+        0;
+    const id = page ?
+      page :
+      page_or_id;
+    character = typeof character === 'string' ?
+      character :
+      location.hash.replace(/#!\//, '');
+
+    if (character) {
+      if (character === ''/* || character === location.hash.replace(/#!\//, '')**/) {
+        location.hash = '#!/'
+        console.log('here')
+        home(offset);
+      }
+      else if (character === 'favorites') {
+        location.hash = '#!/favorites'
+        favorites();
+      }
+      else if (!id) {
+        location.hash = `#!/${character}`
+        search(character, offset);
+      }
+      else {
+        location.hash = `#!/${character}`
+        comics(character, id, offset);
+      }
+    }
+    else {
+      location.hash = '#!/'
+      home(offset);
+    }
+  }
+  return {
+    favorites : favorites,
+    store     : store,
+    json      : json,
+    get       : get
+  }
+}()

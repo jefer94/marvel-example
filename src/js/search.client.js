@@ -12,13 +12,15 @@ window.onresize = () => {
 window.onresize();
 // consult marvel api rest, render various characters if the parameter
 // character is empty else render various comics by character
+const search = (e) => {
+  if (e.keyCode == 13) {
+    let value = document.getElementById('search').value;
+    location.hash = `#!/${value}`;
+    return false;
+  }
+}
 document
   .getElementById('search')
-  .onkeypress = (e) => {
-    if (e.keyCode == 13) {
-      let value = document.getElementById('search').value;
-      client.value(value);
-      return false;
-    }
-  }
-window.onhashchange = client.get();
+  .onkeypress = search
+window.onhashchange = client.get;
+client.get();
